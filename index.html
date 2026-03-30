@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prompt Rétablissement Gracy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Playfair Display', serif;
+            background-color: #050510; /* Fond très sombre */
+            color: #f3f4f6;
+            overflow: hidden; /* Empêche le scroll pendant l'animation */
+        }
+
+        /* --- Animation des étoiles scintillantes --- */
+        .stars {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            background: transparent;
+        }
+        .star {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            animation: twinkle infinite alternate;
+        }
+        @keyframes twinkle {
+            0% { opacity: 0.2; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1.2); box-shadow: 0 0 5px white; }
+        }
+
+        /* --- Animation des pivoines flottantes --- */
+        .flower {
+            position: absolute;
+            opacity: 0.15; /* Subtil pour ne pas gêner la lecture */
+            animation: float 15s infinite ease-in-out alternate;
+            pointer-events: none;
+            z-index: 0;
+            width: 80px; /* Taille par défaut, à ajuster avec tes images */
+        }
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); }
+            100% { transform: translateY(-50px) rotate(20deg); }
+        }
+
+        /* --- Transition "Papier Cadeau" --- */
+        .door {
+            position: fixed;
+            top: 0;
+            width: 50%;
+            height: 100%;
+            background-color: #111827; /* Gris très foncé */
+            z-index: 40;
+            transition: transform 2s cubic-bezier(0.77, 0, 0.175, 1);
+            display: flex;
+            align-items: center;
+            border-right: 2px solid #374151;
+        }
+        #door-left { left: 0; justify-content: flex-end; }
+        #door-right { right: 0; border-right: none; border-left: 2px solid #374151; }
+        
+        .open-left { transform: translateX(-100%); }
+        .open-right { transform: translateX(100%); }
+
+        /* Masquer la page 2 au début */
+        #page-2 { display: none; }
+        
+        /* Curseur pour l'effet machine à écrire */
+        .cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1.2em;
+            background-color: currentColor;
+            vertical-align: middle;
+            animation: blink 0.8s infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* Lecteur audio customisé */
+        .custom-audio-btn {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        .custom-audio-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="relative min-h-screen flex flex-col items-center justify-center">
+
+    <div id="stars-container" class="stars"></div>
+    
+    <div class="flower text-6xl" style="top: 10%; left: 10%; animation-duration: 12s;">🌸</div>
+    <img src="assets/image/pivoine.png" class="flower text-6xl" style="top: 70%; left: 80%; animation-duration: 18sec;">
+    <div class="flower text-6xl" style="top: 40%; left: 85%; animation-duration: 15s;">🌸</div>
+    <img src="assets/image/pivoine.png" class="flower text-6xl" style="top: 80%; left: 15%; animation-duration: 20sec;">
+    <div class="flower text-6xl" style="top: 20%; left: 10%; animation-duration: 12s;">🌸</div>
+    <img src="assets/image/pivoine.png" class="flower text-6xl" style="top: 90%; left: 80%; animation-duration: 18sec;">
+    <div class="flower text-6xl" style="top: 60%; left: 85%; animation-duration: 15s;">🌸</div>
+    <img src="assets/image/pivoine.png" class="flower text-6xl" style="top: 90%; left: 15%; animation-duration: 20sec;">
+
+    <audio id="bg-music" src="assets/audio/rivers.mp3" loop></audio>
+    <audio id="voice-reading" src="assets/audio/voix off.mp3"></audio>
+
+    <div id="page-1" class="relative z-50 flex flex-col items-center justify-center text-center p-6 max-w-2xl mx-auto h-screen">
+        <h1 class="text-2xl md:text-3xl lg:text-4xl mb-8 leading-relaxed font-light tracking-wide shadow-black drop-shadow-lg">
+            "Je sais que ça ne va pas te guérir mais j’ai voulu te faire un petit truc pour t’accompagner dans ton processus de guérison."
+        </h1>
+        <button id="open-btn" class="mt-8 px-8 py-3 rounded-full border border-gray-300 hover:bg-gray-100 hover:text-gray-900 transition-all duration-500 ease-in-out text-lg tracking-widest uppercase">
+            Ouvrir le cadeau
+        </button>
+    </div>
+
+    <div id="door-left" class="door"></div>
+    <div id="door-right" class="door"></div>
+
+    <div id="page-2" class="relative z-10 flex-col items-center justify-center p-4 md:p-12 w-full max-w-4xl mx-auto min-h-screen">
+        
+        <div class="absolute top-6 right-6 md:top-10 md:right-10 flex items-center gap-4 z-20">
+            <span class="text-sm md:text-base italic text-gray-400">Écouter ma voix :</span>
+            <button id="play-voice-btn" class="custom-audio-btn rounded-full w-12 h-12 flex items-center justify-center text-xl">
+                ▶️
+            </button>
+        </div>
+
+        <div class="mt-24 md:mt-16 text-center">
+            <div id="poem-container" class="text-lg md:text-xl lg:text-2xl leading-loose md:leading-loose whitespace-pre-wrap text-gray-200 drop-shadow-md"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. Génération des étoiles ---
+        const starsContainer = document.getElementById('stars-container');
+        for (let i = 0; i < 150; i++) {
+            let star = document.createElement('div');
+            star.className = 'star';
+            star.style.width = Math.random() * 3 + 'px';
+            star.style.height = star.style.width;
+            star.style.left = Math.random() * 100 + 'vw';
+            star.style.top = Math.random() * 100 + 'vh';
+            star.style.animationDuration = (Math.random() * 3 + 2) + 's';
+            starsContainer.appendChild(star);
+        }
+
+        // --- 2. Éléments du DOM ---
+        const btnOpen = document.getElementById('open-btn');
+        const page1 = document.getElementById('page-1');
+        const page2 = document.getElementById('page-2');
+        const doorLeft = document.getElementById('door-left');
+        const doorRight = document.getElementById('door-right');
+        const bgMusic = document.getElementById('bg-music');
+        const voiceReading = document.getElementById('voice-reading');
+        const poemContainer = document.getElementById('poem-container');
+        const btnPlayVoice = document.getElementById('play-voice-btn');
+
+        // --- 3. Le Texte du Poème ---
+        const poemText = `Dans le silence où la nuit étend son voile,
+Je t’envoie mes mots, messagers sans étoile,
+Qu’ils glissent sur ton souffle, doux comme la brume,
+Et apaisent tes douleurs, dissipent l’amertume.
+
+Que chaque matin vienne te rendre la lumière,
+Que ton corps retrouve la paix que le jour espère,
+Que le temps, maître ancien, tisse ses fils d’argent,
+Et guérisse en silence les maux que tu portes en dedans.
+
+Je suis là, invisible, fidèle dans l’ombre,
+Comme la mer qui veille et jamais ne succombe,
+Portant ton courage sur l’aile du vent,
+Te murmurant doucement : “Je suis présent.”
+
+Si tes forces s’égarent dans l’éclat des heures,
+Sache qu’un cœur veille, sans bruit, sans peur,
+Que chaque battement, même loin de mes yeux,
+T’accompagne toujours vers des cieux plus heureux.
+
+Lève-toi, âme vaillante, même au seuil du doute,
+Laisse la vie te rendre sa chaleur et sa route,
+Et quand le soleil viendra briser la nuit,
+Sache que je suis là… à tes côtés, sans bruit.
+
+Prompt rétablissement Gracy NYOTA MATALA.`;
+
+        // --- 4. Transition & Lancement Musique ---
+        btnOpen.addEventListener('click', () => {
+            // Lancer la musique de fond (Yiruma)
+            bgMusic.volume = 0.4; // Volume plus bas pour laisser place à la voix
+            bgMusic.play().catch(e => console.log("La lecture auto a été bloquée."));
+
+            // Animation des portes
+            doorLeft.classList.add('open-left');
+            doorRight.classList.add('open-right');
+
+            // Cacher page 1, afficher page 2 après un léger délai
+            setTimeout(() => {
+                page1.style.display = 'none';
+                page2.style.display = 'flex';
+                document.body.style.overflow = 'auto'; // Permettre le scroll si écran petit
+                
+                // Lancer l'effet machine à écrire
+                startTypewriter();
+            }, 1000);
+        });
+
+        // --- 5. Effet Machine à Écrire (Typewriter) ---
+        let i = 0;
+        let isTyping = false;
+        // Vitesse de frappe. 60ms est une bonne moyenne pour la lecture.
+        const typingSpeed = 65; 
+
+        function startTypewriter() {
+            if (isTyping) return;
+            isTyping = true;
+            poemContainer.innerHTML = '<span class="cursor"></span>';
+            typeChar();
+        }
+
+        function typeChar() {
+            if (i < poemText.length) {
+                let char = poemText.charAt(i);
+                
+                // Retirer le curseur
+                poemContainer.innerHTML = poemContainer.innerHTML.slice(0, -28); 
+                
+                // Ajouter le caractère actuel + remettre le curseur
+                poemContainer.innerHTML += char + '<span class="cursor"></span>';
+                
+                i++;
+                
+                // Gérer les pauses pour la ponctuation pour un effet plus naturel
+                let delay = typingSpeed;
+                if (char === ',' || char === '.') delay = typingSpeed * 4;
+                if (char === '\n') delay = typingSpeed * 6;
+
+                setTimeout(typeChar, delay);
+            } else {
+                // Fin de l'écriture, enlever le curseur
+                poemContainer.innerHTML = poemContainer.innerHTML.slice(0, -28); 
+            }
+        }
+
+        // --- 6. Gestion du Lecteur Vocal ---
+        let isVoicePlaying = false;
+        btnPlayVoice.addEventListener('click', () => {
+            if (!isVoicePlaying) {
+                voiceReading.play();
+                btnPlayVoice.innerHTML = '⏸️'; // Icône pause
+                isVoicePlaying = true;
+                
+                // Optionnel : Baisser un peu plus la musique de fond pendant que tu parles
+                bgMusic.volume = 0.05; 
+            } else {
+                voiceReading.pause();
+                btnPlayVoice.innerHTML = '▶️'; // Icône play
+                isVoicePlaying = false;
+                
+                // Remettre le volume de la musique
+                bgMusic.volume = 0.4;
+            }
+        });
+
+        // Quand la voix se termine
+        voiceReading.addEventListener('ended', () => {
+            btnPlayVoice.innerHTML = '▶️';
+            isVoicePlaying = false;
+            bgMusic.volume = 0.4;
+        });
+
+    </script>
+</body>
+</html>
