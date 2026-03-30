@@ -195,7 +195,7 @@ Prompt rétablissement Gracy NYOTA MATALA.`;
         // --- 4. Transition & Lancement Musique ---
         btnOpen.addEventListener('click', () => {
             // Lancer la musique de fond (Yiruma)
-            bgMusic.volume = 0.4; // Volume plus bas pour laisser place à la voix
+            bgMusic.volume = 0.05; // Volume plus bas pour laisser place à la voix
             bgMusic.play().catch(e => console.log("La lecture auto a été bloquée."));
 
             // Animation des portes
@@ -257,9 +257,9 @@ Prompt rétablissement Gracy NYOTA MATALA.`;
                 voiceReading.play();
                 btnPlayVoice.innerHTML = '⏸️'; // Icône pause
                 isVoicePlaying = true;
-                
+                voiceReading.volume = 2;
                 // Optionnel : Baisser un peu plus la musique de fond pendant que tu parles
-                bgMusic.volume = 0.05; 
+                bgMusic.volume = 0.3; 
             } else {
                 voiceReading.pause();
                 btnPlayVoice.innerHTML = '▶️'; // Icône play
